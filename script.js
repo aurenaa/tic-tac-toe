@@ -2,6 +2,7 @@ function GameBoard() { //gameboard object
     const rows = 3;
     const columns = 3;
     const board = [];
+    let moves = 0;
 
     for (let i = 0; i < rows; i++) { //2d game array
         board[i] = [];
@@ -13,19 +14,47 @@ function GameBoard() { //gameboard object
     function getBoard() {
         return board;
     };
-    
+
     function placeXOrO(row, column, player) {
+        let taken = false;
+
         if (board[row][column].getValue() === 0) {
             board[row][column].addXorO(player);
-        }
-        else {
+            moves++;
+        } else {
             console.log("Cell is taken. Try another spot!");
+            taken = true;
         }
+
+        return taken; 
     };
+
+    function threeInARow() {
+        for (let i = 0; i < rows; i++) {
+            if (board[i][0].getValue() !== 0 && board[i][0].getValue() === board[i][1].getValue() && board[i][1].getValue() === board[i][2].getValue()) {
+                return true;
+            }
+        }
+
+        for (let j = 0; j < columns; j++) {
+            if (board[0][j].getValue() !== 0 && board[0][j].getValue() === board[1][j].getValue() && board[1][j].getValue() === board[2][j].getValue()) {
+                return true;
+            }
+        }
+        //diagonals
+        if (board[0][0].getValue() !== 0 && board[0][0].getValue() === board[1][1].getValue() && board[1][1].getValue() === board[2][2].getValue()) {
+            return true;
+        }
+        if (board[0][2].getValue() !== 0 && board[0][2].getValue() === board[1][1].getValue() && board[1][1].getValue() === board[2][0].getValue()) {
+            return true;
+        }
+
+        return false;
+    }
 
     function Cell() {
         let value = 0;
-        
+
         function addXorO(player) {
             value = player;
         };
@@ -34,19 +63,20 @@ function GameBoard() { //gameboard object
             return value;
         };
 
-        return {addXorO, getValue};
+        return { addXorO, getValue };
     }
 
     function printBoard() {
-        const boardWithValues = board.map(row => row.map(cell => cell.getValue())); // Kreiraj matricu vrednosti
+        const boardWithValues = board.map(row => row.map(cell => cell.getValue()));
         console.log(boardWithValues); 
-    }
-    
-    return {getBoard, placeXOrO, printBoard};
+    };
+
+    return { getBoard, placeXOrO, printBoard, threeInARow};
 }
 
 function GameController(playerOne, playerTwo) { //game flow object
     const board = GameBoard();
+    let firstRound = true;
 
     const players = [ //object array for players
         {
@@ -54,17 +84,17 @@ function GameController(playerOne, playerTwo) { //game flow object
             token: 1
         },
         {
-            name: playerTwo,
+            name: playerTwo, 
             token: 2
         }
     ];
 
-    let activePlayer = players[0]; //which player is on turn
+    let activePlayer = players[0];
+
     function switchPlayerTurn() {
         if (activePlayer == players[0]) {
             activePlayer = players[1];
-        }
-        else {
+        } else {
             activePlayer = players[0];
         }
 
@@ -80,16 +110,48 @@ function GameController(playerOne, playerTwo) { //game flow object
         console.log(`${getActivePlayer().name}'s turn.`);
     };
 
-    function playRound(row, column) {
-        console.log("Playing round.");
-        board.placeXOrO(row, column, getActivePlayer().token);
+    function printPlayer() {
+        firstRound = false;
+        console.log(`${getActivePlayer().name}'s turn.`);
+    };
 
-        switchPlayerTurn();
-        printNewRound();
+    function playRound(row, column) {
+        let moves = 0;
+
+        if (firstRound) {
+            printPlayer();
+        }
+
+        console.log("Playing round.");
+        const taken = board.placeXOrO(row, column, getActivePlayer().token);
+        
+        if (taken) {
+            console.log(`Still ${getActivePlayer().name}'s turn.`);
+        } else {
+            const winner = board.threeInARow();
+            if (winner) {
+                board.printBoard();
+                console.log(`${getActivePlayer().name} wins!`);
+                return;
+            }
+
+            if (moves === 9) {
+                console.log("It's a draw!");
+                board.printBoard();
+                return;
+            }
+
+            switchPlayerTurn(); 
+            printNewRound(); 
+        }
     }
-    return {playRound, getActivePlayer};
+
+    return { playRound, getActivePlayer };
 }
 
 const game = GameController("Alice", "Bob");
-game.playRound(0, 0);
-game.playRound(1, 1);
+game.playRound(0, 0); //Alice
+game.playRound(1, 0); // Bob
+game.playRound(0, 1); // Alice
+game.playRound(1, 1); // Bob
+game.playRound(0, 2); // Alice
