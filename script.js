@@ -168,7 +168,8 @@ function ScreenController() {
                 cellButton.dataset.row = rowIndex;
                 cellButton.dataset.column = colIndex;
 
-                cellButton.textContent = cell.getValue();
+                const value = cell.getValue();
+                cellButton.textContent = value === 0 ? "" : value;
                 boardDiv.appendChild(cellButton);
             });
         });
@@ -225,6 +226,8 @@ function ScreenController() {
     //allows user to play a whole new game
     const newGameButton = document.querySelector(".new-game");
     newGameButton.addEventListener("click", () => {
+        playerOne.textContent = "Player X: 0";
+        playerTwo.textContent = "Player O: 0";
         ScreenController();
     })
 
