@@ -81,11 +81,11 @@ function GameController(playerOne, playerTwo) { //game flow object
     const players = [ //object array for players
         {
             name: playerOne,
-            token: 1
+            token: "X"
         },
         {
             name: playerTwo, 
-            token: 2
+            token: "O"
         }
     ];
 
@@ -146,12 +146,59 @@ function GameController(playerOne, playerTwo) { //game flow object
         }
     }
 
-    return { playRound, getActivePlayer };
+    return { playRound, getActivePlayer, getBoard: board.getBoard, threeInARow: board.threeInARow };
 }
 
-const game = GameController("Alice", "Bob");
-game.playRound(0, 0); //Alice
-game.playRound(1, 0); // Bob
-game.playRound(0, 1); // Alice
-game.playRound(1, 1); // Bob
-game.playRound(0, 2); // Alice
+function ScreenController() {
+    const game = GameController("Player X", "Player O");
+
+    const boardDiv = document.querySelector(".board");
+    function updateScreen() {
+        boardDiv.textContent = ""; //clearing the board
+
+        const board = game.getBoard();
+
+        board.forEach((row, rowIndex) => {
+            row.forEach((cell, colIndex) => {
+                const cellButton = document.createElement("button");
+                cellButton.classList.add("cell");
+
+                cellButton.dataset.row = rowIndex;
+                cellButton.dataset.column = colIndex;
+
+                cellButton.textContent = cell.getValue();
+                boardDiv.appendChild(cellButton);
+            });
+        });
+    }
+
+    function clickHandlerBoard(e) {
+        const selectedRow = e.target.dataset.row;
+        const selectedColumn = e.target.dataset.column;
+
+        if (selectedRow === undefined || selectedColumn === undefined) return;
+
+        if (game.threeInARow()) {
+            console.log("Game is over. No more moves allowed.");
+            return;
+        }
+
+        game.playRound(parseInt(selectedRow), parseInt(selectedColumn));
+        updateScreen();
+    }
+
+    boardDiv.addEventListener("click", clickHandlerBoard);
+    updateScreen();
+
+    const resetButton = document.querySelector(".reset-game");
+    resetButton.addEventListener("click", () => {
+        ScreenController();
+    })
+
+    const newGameButton = document.querySelector(".new-game");
+    newGameButton.addEventListener("click", () => {
+        ScreenController();
+    })
+}
+
+ScreenController();
