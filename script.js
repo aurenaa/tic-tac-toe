@@ -149,8 +149,10 @@ function GameController(playerOne, playerTwo) { //game flow object
     return { playRound, getActivePlayer, getBoard: board.getBoard, threeInARow: board.threeInARow };
 }
 
+    let playerTwoScore = 0;
 function ScreenController() {
     const game = GameController("Player X", "Player O");
+    let end = false;
 
     const boardDiv = document.querySelector(".board");
     function updateScreen() {
@@ -170,6 +172,11 @@ function ScreenController() {
                 boardDiv.appendChild(cellButton);
             });
         });
+
+        if (game.threeInARow()) {
+            updateScores();
+            end = true;
+        }
     }
 
     function clickHandlerBoard(e) {
@@ -178,7 +185,7 @@ function ScreenController() {
 
         if (selectedRow === undefined || selectedColumn === undefined) return;
 
-        if (game.threeInARow()) {
+        if (end) {
             console.log("Game is over. No more moves allowed.");
             return;
         }
@@ -187,18 +194,40 @@ function ScreenController() {
         updateScreen();
     }
 
+    const playerOne = document.querySelector(".player-one");
+    let playerOneScore = 0;
+    const playerTwo = document.querySelector(".player-two");
+    let playerTwoScore = 0;
+    
+    function updateScores() {
+        if (game.getActivePlayer().name == "Player X") {
+            playerOneScore++;
+            playerOne.textContent = `Player X: ${playerOneScore}`;
+        }
+        else {
+            playerTwoScore++;
+            playerTwo.textContent = `Player O: ${playerTwoScore}`;
+        }
+    }
+
     boardDiv.addEventListener("click", clickHandlerBoard);
     updateScreen();
 
+    //allows user to play another round
     const resetButton = document.querySelector(".reset-game");
     resetButton.addEventListener("click", () => {
-        ScreenController();
+        const newGame = GameController("Player X", "Player O");
+        Object.assign(game, newGame);
+        end = false;
+        updateScreen();
     })
 
+    //allows user to play a whole new game
     const newGameButton = document.querySelector(".new-game");
     newGameButton.addEventListener("click", () => {
         ScreenController();
     })
+
 }
 
 ScreenController();
